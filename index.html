@@ -156,11 +156,11 @@
         <p>1. <code>A</code> 代表任意汉字</p>
         <p>2. <code>[]</code> 代表从中任选一字</p>
         <p>3. <code>&lt;&gt;</code> 代表包含的字可以乱序</p>
-        <p>示例：输入 <code>AA&lt;一二[三四五六]AA&gt;</code> 可以搜到 <b>不问三七二十一</b>。</p>
+        <p>示例：输入 <code>A[上下左右]AA&lt;A一般&gt;</code> 可以搜到 <b>天下乌鸦一般黑</b>。</p>
     </div>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="请输入检索表达式，如 AA<一二[三四五六]AA>" autocomplete="off">
+        <input type="text" id="searchInput" placeholder="请输入检索表达式，如 A[上下左右]AA<A一般>" autocomplete="off">
         <button onclick="performSearch()">检索</button>
     </div>
 
