@@ -149,15 +149,15 @@
 <body>
 
 <div class="container">
-    <h1>成语检索系统</h1>
+    <h1>中文文中</h1>
     <div class="subtitle">Idiom Pattern Search Engine</div>
 
     <div class="help-text">
         <p><b>语法说明：</b></p>
         <p>1. <code>A</code> 代表任意汉字</p>
-        <p>2. <code>[天地]</code> 代表从中任选一字</p>
-        <p>3. <code>&lt;鼻A&gt;</code> 代表包含的字可以乱序</p>
-        <p>示例：输入 <code>&lt;鼻A&gt;[天地]A</code> 可以搜到 <b>阿鼻地狱</b>。</p>
+        <p>2. <code>[]</code> 代表从中任选一字</p>
+        <p>3. <code>&lt;&gt;</code> 代表包含的字可以乱序</p>
+        <p>示例：输入 <code>&lt;本A&gt;[经]A</code> 可以搜到 <b>一本正经</b>。</p>
     </div>
 
     <div class="search-box">
@@ -170,19 +170,9 @@
 </div>
 
 <script>
-    // --- 1. 初始化语料库 ---
-    // 在实际使用中，你可以使用 fetch('idioms.json') 来加载上万条数据
-    // 这里为了演示直接写死一个小语料库，包含目标词语。
-    let corpus = [
-        {"ci": "阿鼻地狱", "pinyin": "ā bí dì yù"},
-        {"ci": "欢天喜地", "pinyin": "huān tiān xǐ dì"},
-        {"ci": "开天辟地", "pinyin": "kāi tiān pì dì"},
-        {"ci": "冰天雪地", "pinyin": "bīng tiān xuě dì"},
-        {"ci": "鼻青脸肿", "pinyin": "bí qīng liǎn zhǒng"},
-        {"ci": "顶天立地", "pinyin": "dǐng tiān lì dì"}
-    ];
 
-  
+    let corpus = [];
+
     fetch('data/ci.json')
         .then(response => response.json())
         .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 条成语`; })
