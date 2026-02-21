@@ -33,7 +33,7 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px; /* 稍微放宽一点，给文本留出空间 */
             background: #fff;
         }
 
@@ -51,6 +51,56 @@
             color: var(--text-gray);
             font-size: 14px;
             margin-bottom: 40px;
+        }
+
+        /* 提示语 */
+        .help-text {
+            font-size: 13px;
+            color: var(--text-gray);
+            background: #f8faf9;
+            padding: 15px;
+            border-left: 4px solid var(--ink-green);
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .help-text code {
+            background: #e9ecea;
+            color: var(--ink-green);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        /* --- 语料库选择区域 --- */
+        .corpus-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .corpus-btn {
+            padding: 6px 16px;
+            font-size: 14px;
+            color: var(--text-gray);
+            background: #f8faf9;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .corpus-btn:hover {
+            border-color: var(--ink-green-light);
+            color: var(--ink-green-light);
+        }
+
+        .corpus-btn.active {
+            background: var(--ink-green);
+            color: #fff;
+            border-color: var(--ink-green);
         }
 
         /* 搜索框区域 */
@@ -84,29 +134,11 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
 
         button:hover {
             background-color: var(--ink-green-light);
-        }
-
-        /* 提示语 */
-        .help-text {
-            font-size: 13px;
-            color: var(--text-gray);
-            background: #f8faf9;
-            padding: 15px;
-            border-left: 4px solid var(--ink-green);
-            border-radius: 4px;
-            margin-bottom: 30px;
-        }
-
-        .help-text code {
-            background: #e9ecea;
-            color: var(--ink-green);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
         }
 
         /* 结果展示区 */
@@ -117,10 +149,10 @@
         .result-item {
             padding: 16px;
             border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s ease;
             display: flex;
-            align-items: baseline;
+            align-items: flex-start; /* 顶部对齐，防止展开时词条错位 */
             gap: 15px;
+            width: 100%;
         }
 
         .result-item:hover {
@@ -128,20 +160,40 @@
         }
 
         .word {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: var(--ink-green);
+            flex-shrink: 0;      /* 保证词条本身的宽度不被压缩 */
+            min-width: 80px;     /* 给词语留出基础宽度 */
         }
 
+        /* --- 解释文本处理：单行截断与展开 --- */
         .explanation {
             font-size: 14px;
             color: var(--text-gray);
+            flex: 1;             /* 占满剩余空间 */
+            overflow: hidden;    
+            text-overflow: ellipsis; 
+            white-space: nowrap; /* 强制单行显示 */
+            cursor: pointer;     /* 鼠标变手型，提示可点击 */
+            line-height: 1.6;
+            margin-top: 2px;
+        }
+
+        .explanation:hover {
+            color: var(--ink-green-light);
+        }
+
+        /* 展开状态的类 */
+        .explanation.expanded {
+            white-space: normal; /* 恢复多行显示 */
         }
 
         .status {
             text-align: center;
             color: var(--text-gray);
             margin-top: 20px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -159,26 +211,86 @@
         <p>示例：输入 <code>A[上下左右]AA&lt;A一般&gt;</code> 可以搜到 <b>天下乌鸦一般黑</b>。</p>
     </div>
 
+    <!-- 新增：语料库多选区域 -->
+    <div class="corpus-selector" id="corpusSelector">
+        <!-- data-url 填写你对应的 json 文件路径。默认激活选中 word.json -->
+        <div class="corpus-btn active" data-url="data/word.json">中文词语</div>
+        <div class="corpus-btn" data-url="data/idiom.json">成语大全</div>
+        <div class="corpus-btn" data-url="data/proverb.json">俗语歇后语</div>
+    </div>
+
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="请输入检索表达式，如 A[上下左右]AA<A一般>" autocomplete="off">
         <button onclick="performSearch()">检索</button>
     </div>
 
-    <div id="statusMessage" class="status"></div>
+    <div id="statusMessage" class="status">正在初始化...</div>
     <ul id="results"></ul>
 </div>
 
 <script>
+    // --- 1. 语料库管理系统 (支持多选和缓存) ---
+    let corpusCache = {}; // 缓存已加载的文件数据，避免重复下载: { 'data/word.json': [...] }
+    let corpus = [];      // 聚合后，当前用于检索的合并数组
 
-    let corpus = [];
+    async function updateCorpus() {
+        const statusMsg = document.getElementById('statusMessage');
+        statusMsg.innerText = "正在加载语料库...";
+        
+        const activeBtns = document.querySelectorAll('.corpus-btn.active');
+        let combinedCorpus = [];
 
-    fetch('data/word.json')
-        .then(response => response.json())
-        .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 个条目`; })
-        .catch(err => console.error("语料库加载失败", err));
-  
+        // 遍历所有被选中的语料库
+        for (let btn of activeBtns) {
+            let url = btn.getAttribute('data-url');
+            
+            // 如果缓存里没有，则进行 Fetch 下载
+            if (!corpusCache[url]) {
+                try {
+                    let response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    let data = await response.json();
+                    corpusCache[url] = data; // 写入缓存
+                } catch (err) {
+                    console.error("加载失败: " + url, err);
+                    // 如果文件不存在，给个空数组避免后续报错
+                    corpusCache[url] = []; 
+                }
+            }
+            // 拼接到总语料库中
+            combinedCorpus = combinedCorpus.concat(corpusCache[url]);
+        }
+        
+        corpus = combinedCorpus;
+        statusMsg.innerText = `✅ 成功加载 ${corpus.length} 个条目`;
+        
+        // 如果输入框有内容，切换语料库后自动触发一次搜索
+        if (document.getElementById('searchInput').value.trim() !== "") {
+            performSearch();
+        }
+    }
 
-    // --- 2. 核心算法：生成全排列 (代替 Python 的 itertools.permutations) ---
+    // 给标签按钮绑定点击事件
+    document.querySelectorAll('.corpus-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            
+            // 限制：至少需要保留一个激活的语料库
+            if (document.querySelectorAll('.corpus-btn.active').length === 0) {
+                this.classList.add('active'); // 强制恢复激活
+                return;
+            }
+            
+            // 状态变更后重新合并语料库
+            updateCorpus();
+        });
+    });
+
+    // 页面首次加载时，触发一次加载
+    updateCorpus();
+
+
+    // --- 2. 核心算法：生成全排列 ---
     function getPermutations(arr) {
         if (arr.length <= 1) return [arr];
         let result = [];
@@ -193,12 +305,12 @@
         return result;
     }
 
-    // 正则转义，防止汉字或特殊符号破坏正则结构
+    // 正则转义
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    // --- 3. 核心算法：解析自定义语法转化为正则 (翻译自 Python) ---
+    // --- 3. 解析自定义语法转化为正则 ---
     function parsePattern(userInput) {
         let regexParts = [];
         let i = 0;
@@ -225,9 +337,7 @@
                     else elements.push(escapeRegExp(c));
                 }
                 
-                // 获取全排列
                 let perms = getPermutations(elements);
-                // 拼接排列组合并去重
                 let permStrings = Array.from(new Set(perms.map(p => p.join(''))));
                 
                 regexParts.push(`(?:${permStrings.join('|')})`);
@@ -254,16 +364,14 @@
         resultsContainer.innerHTML = ''; // 清空上次结果
         
         if (!input) {
-            statusMsg.innerText = "请输入检索内容";
+            statusMsg.innerText = `✅ 当前总词库: ${corpus.length} 个条目`;
             return;
         }
 
         try {
-            // 编译正则
             const regexStr = parsePattern(input);
             const regex = new RegExp(regexStr);
             
-            // 过滤成语
             const matched = corpus.filter(item => regex.test(item.word));
             
             if (matched.length > 0) {
@@ -271,10 +379,25 @@
                 matched.forEach(item => {
                     const li = document.createElement('li');
                     li.className = 'result-item';
-                    li.innerHTML = `
-                        <span class="word">${item.word}</span>
-                        <span class="explanation">${item.explanation || ''}</span>
-                    `;
+                    
+                    // 创建词语 Span
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    wordSpan.innerText = item.word;
+
+                    // 创建解释 Span
+                    const expSpan = document.createElement('span');
+                    expSpan.className = 'explanation';
+                    expSpan.innerText = item.explanation || '暂无详细解释...';
+                    expSpan.title = "点击展开/收起完整解释"; // 鼠标悬浮提示
+                    
+                    // 【功能点：点击展开完整解释】
+                    expSpan.addEventListener('click', function() {
+                        this.classList.toggle('expanded');
+                    });
+
+                    li.appendChild(wordSpan);
+                    li.appendChild(expSpan);
                     resultsContainer.appendChild(li);
                 });
             } else {
