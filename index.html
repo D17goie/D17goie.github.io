@@ -127,7 +127,7 @@
             background-color: #f4f7f5;
         }
 
-        .ci {
+        .word {
             font-size: 20px;
             font-weight: bold;
             color: var(--ink-green);
@@ -172,7 +172,7 @@
 
     let corpus = [];
 
-    fetch('data/ci.json')
+    fetch('data/word.json')
         .then(response => response.json())
         .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 个条目`; })
         .catch(err => console.error("语料库加载失败", err));
@@ -264,7 +264,7 @@
             const regex = new RegExp(regexStr);
             
             // 过滤成语
-            const matched = corpus.filter(item => regex.test(item.ci));
+            const matched = corpus.filter(item => regex.test(item.word));
             
             if (matched.length > 0) {
                 statusMsg.innerText = `为您找到 ${matched.length} 个结果：`;
@@ -272,7 +272,7 @@
                     const li = document.createElement('li');
                     li.className = 'result-item';
                     li.innerHTML = `
-                        <span class="ci">${item.ci}</span>
+                        <span class="word">${item.word}</span>
                         <span class="pinyin">${item.pinyin || ''}</span>
                     `;
                     resultsContainer.appendChild(li);
