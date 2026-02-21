@@ -218,11 +218,11 @@
 
     <div class="help-text">
         <p><b>语法说明：</b></p>
-        <p>1. <code>A</code> 代表任意1个汉字</p>
-        <p>2. <code>A*</code> 代表任意多个汉字（可以为0个）</p>
+        <p>1. <code>A</code> 代表任意一个汉字</p>
+        <p>2. <code>A*</code> 代表任意多个汉字（可以为空）</p>
         <p>3. <code>[]</code> 代表从中任选一字</p>
-        <p>4. <code>&lt;&gt;</code> 代表包含的字可以乱序</p>
-        <p>示例：输入 <code>A*&lt;A一般&gt;A*</code> 可搜出包含“一般”和任一其他汉字，且顺序打乱的任意长度词句。</p>
+        <p>4. <code>&lt;&gt;</code> 代表包含的字可以排列为任意顺序</p>
+        <p>示例：输入 <code>&lt;例[上下左右]A*&gt;</code> 可以检索到“下不为例”。</p>
     </div>
 
     <!-- 语料库多选区域 -->
@@ -381,7 +381,7 @@
         return "^" + regexParts.join('') + "$";
     }
 
-    // --- 4. 具备超时保护的异步分段搜索系统 ---
+    // 具备超时保护的异步分段搜索系统
     
     let searchState = {
         isActive: false,
