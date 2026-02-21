@@ -133,7 +133,7 @@
             color: var(--ink-green);
         }
 
-        .pinyin {
+        .explanation {
             font-size: 14px;
             color: var(--text-gray);
         }
@@ -273,12 +273,12 @@
                     li.className = 'result-item';
                     li.innerHTML = `
                         <span class="word">${item.word}</span>
-                        <span class="pinyin">${item.pinyin || ''}</span>
+                        <span class="explanation">${item.explanation || ''}</span>
                     `;
                     resultsContainer.appendChild(li);
                 });
             } else {
-                statusMsg.innerText = "没有找到符合条件的成语。";
+                statusMsg.innerText = "没有找到符合条件的词语。";
             }
             
         } catch (error) {
