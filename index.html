@@ -128,7 +128,7 @@
             background-color: #f4f7f5;
         }
 
-        .word {
+        .ci {
             font-size: 20px;
             font-weight: bold;
             color: var(--ink-green);
@@ -174,21 +174,20 @@
     // 在实际使用中，你可以使用 fetch('idioms.json') 来加载上万条数据
     // 这里为了演示直接写死一个小语料库，包含目标词语。
     let corpus = [
-        {"word": "阿鼻地狱", "pinyin": "ā bí dì yù"},
-        {"word": "欢天喜地", "pinyin": "huān tiān xǐ dì"},
-        {"word": "开天辟地", "pinyin": "kāi tiān pì dì"},
-        {"word": "冰天雪地", "pinyin": "bīng tiān xuě dì"},
-        {"word": "鼻青脸肿", "pinyin": "bí qīng liǎn zhǒng"},
-        {"word": "顶天立地", "pinyin": "dǐng tiān lì dì"}
+        {"ci": "阿鼻地狱", "pinyin": "ā bí dì yù"},
+        {"ci": "欢天喜地", "pinyin": "huān tiān xǐ dì"},
+        {"ci": "开天辟地", "pinyin": "kāi tiān pì dì"},
+        {"ci": "冰天雪地", "pinyin": "bīng tiān xuě dì"},
+        {"ci": "鼻青脸肿", "pinyin": "bí qīng liǎn zhǒng"},
+        {"ci": "顶天立地", "pinyin": "dǐng tiān lì dì"}
     ];
 
-    // 如果你有完整的 idioms.json，取消下面这段代码的注释：
-    /*
-    fetch('idioms.json')
+  
+    fetch('data/ci.json')
         .then(response => response.json())
         .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 条成语`; })
         .catch(err => console.error("语料库加载失败", err));
-    */
+  
 
     // --- 2. 核心算法：生成全排列 (代替 Python 的 itertools.permutations) ---
     function getPermutations(arr) {
@@ -276,7 +275,7 @@
             const regex = new RegExp(regexStr);
             
             // 过滤成语
-            const matched = corpus.filter(item => regex.test(item.word));
+            const matched = corpus.filter(item => regex.test(item.ci));
             
             if (matched.length > 0) {
                 statusMsg.innerText = `为您找到 ${matched.length} 个结果：`;
@@ -284,7 +283,7 @@
                     const li = document.createElement('li');
                     li.className = 'result-item';
                     li.innerHTML = `
-                        <span class="word">${item.word}</span>
+                        <span class="ci">${item.ci}</span>
                         <span class="pinyin">${item.pinyin || ''}</span>
                     `;
                     resultsContainer.appendChild(li);
