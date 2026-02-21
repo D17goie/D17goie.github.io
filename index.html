@@ -174,7 +174,7 @@
 
     fetch('data/ci.json')
         .then(response => response.json())
-        .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 条成语`; })
+        .then(data => { corpus = data; document.getElementById('statusMessage').innerText = `✅ 成功加载 ${corpus.length} 个条目`; })
         .catch(err => console.error("语料库加载失败", err));
   
 
