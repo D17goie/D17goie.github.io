@@ -341,9 +341,19 @@
                             elements.push('.');
                             k++;
                         }
-                    } else {
-                        elements.push(escapeRegExp(content[k]));
-                        k++;
+                    } 
+                    else {
+                        if (content[k] === '[') {
+                            let endIdx = content.indexOf(']', k);
+                            if (endIdx === -1) throw new Error("语法错误: 未闭合的 '[' 在 '<>' 内部");
+                            elements.push(`[${escapeRegExp(content.substring(k + 1, endIdx))}]`);
+                            k = endIdx + 1;
+                        }
+                        else{
+                            elements.push(escapeRegExp(content[k]));
+                            k++;
+                        }
+                        
                     }
                 }
                 
